@@ -28,14 +28,15 @@ class Environment:
         self.buffer_size = 0
 
         # pick a random trace file
-        self.trace_idx = 0
+        # 修正：真正随机选择轨迹文件，而不是固定从第0个开始
+        self.trace_idx = np.random.randint(len(self.all_cooked_time))
         self.cooked_time = self.all_cooked_time[self.trace_idx]
         self.cooked_bw = self.all_cooked_bw[self.trace_idx]
 
         self.mahimahi_start_ptr = 1
         # randomize the start point of the trace
-        # note: trace file starts with time 0
-        self.mahimahi_ptr = 1
+        # 修正：真正随机化轨迹的起始点，防止模型通过死记硬背时序波动来“作弊”
+        self.mahimahi_ptr = np.random.randint(1, len(self.cooked_bw))
         self.last_mahimahi_time = self.cooked_time[self.mahimahi_ptr - 1]
 
         self.video_size = {}  # in bytes
@@ -82,7 +83,6 @@ class Environment:
                 # note: trace file starts with time 0
                 self.mahimahi_ptr = 1
                 self.last_mahimahi_time = 0
-        # 4.09 以类似微分的方式模拟下载过程
 
         delay *= MILLISECONDS_IN_SECOND
         delay += LINK_RTT
@@ -138,16 +138,13 @@ class Environment:
             self.buffer_size = 0
             self.video_chunk_counter = 0
             
-            self.trace_idx += 1
-            if self.trace_idx >= len(self.all_cooked_time):
-                self.trace_idx = 0            
-
+            # 修正：播完一个视频后，随机选择下一个轨迹文件，而不是顺序递增
+            self.trace_idx = np.random.randint(len(self.all_cooked_time))
             self.cooked_time = self.all_cooked_time[self.trace_idx]
             self.cooked_bw = self.all_cooked_bw[self.trace_idx]
 
-            # randomize the start point of the video
-            # note: trace file starts with time 0
-            self.mahimahi_ptr = self.mahimahi_start_ptr
+            # 修正：随机化下一段视频的起始点
+            self.mahimahi_ptr = np.random.randint(1, len(self.cooked_bw))
             self.last_mahimahi_time = self.cooked_time[self.mahimahi_ptr - 1]
 
         next_video_chunk_sizes = []
